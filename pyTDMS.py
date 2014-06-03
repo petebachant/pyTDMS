@@ -26,7 +26,7 @@ Thanks guys!
 
 """
 
-
+from __future__ import division, print_function
 
 
 
@@ -71,12 +71,12 @@ def byteToHex( byteStr ):
 
 
 tocProperties = {
-    'kTocMetaData'         : (1L<<1),
-    'kTocRawData'          : (1L<<3),
-    'kTocDAQmxRawData'     : (1L<<7),
-    'kTocInterleavedData'  : (1L<<5),
-    'kTocBigEndian'        : (1L<<6),
-    'kTocNewObjList'       : (1L<<2),
+    'kTocMetaData'         : (1<<1),
+    'kTocRawData'          : (1<<3),
+    'kTocDAQmxRawData'     : (1<<7),
+    'kTocInterleavedData'  : (1<<5),
+    'kTocBigEndian'        : (1<<6),
+    'kTocNewObjList'       : (1<<2),
     }
 
 
@@ -243,8 +243,8 @@ def readLeadIn( f ):
 
     
     s = f.read(4) # read 4 bytes
-    if (not s in ['TDSm']):
-        print ("Error: segment does not start with TDSm, but with ",s)
+    if (not s in [b'TDSm']):
+        print("Error: segment does not start with TDSm, but with ", s)
         exit()
 
     
@@ -432,7 +432,7 @@ def mergeObject( obj, newobj ):
 
     # We assume that objectpath is the same
     if (newobjectpath!=objectpath):
-        print "Error: trying to merge non-same objectpaths:",newobjectpath,objectpath
+        print("Error: trying to merge non-same objectpaths:"),newobjectpath,objectpath
         exit()
 
 
@@ -513,7 +513,7 @@ def readMetaData( f ):
          properties) = obj
 
         if verbose:
-            print "Read object",objectpath
+            print("Read object", objectpath)
 
         # Add this object, or, if an object with the same objectpath
         # exists already, make it update that one.
@@ -586,7 +586,7 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
         (rawdata_datatype, rawdata_dim, rawdata_values) = rawdata
 
         if (rawdata_dim!=1):
-            print "Error! Raw data dimension is ",rawdata_dim," and should have been 1."
+            print("Error! Raw data dimension is ", rawdata_dim, " and should have been 1.")
             exit()
         
         # Calculate how many bytes a single value is
@@ -618,7 +618,7 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
     if total_chunks == 0:
         n_chunks = 0
     else:
-        n_chunks = total_chunks / chunk_size
+        n_chunks = int(total_chunks/chunk_size)
     
         if (total_chunks % chunk_size) != 0:
             raise ValueError("Data size is not a multiple of the chunk size")
@@ -626,7 +626,8 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
     
     
     if verbose:
-        print "Ready for reading",total_chunks,"bytes (",chunk_size, ") in",n_chunks,"chunks",
+        print("Ready for reading", total_chunks, "bytes (",
+              chunk_size, ") in",n_chunks,"chunks")
             
 
             
@@ -641,7 +642,7 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
 
     if interleaved:
 
-        print " ==> Interleaved"
+        print(" ==> Interleaved")
 
         # Initialise data to be empty
         data = {}
@@ -674,7 +675,7 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
 
     else:
         if verbose:
-            print " ==> Not Interleaved"
+            print(" ==> Not Interleaved")
         data = {}
 
         # Start with no data in our channel
@@ -782,9 +783,9 @@ def dumpProperties(props):
 
 
 
-def csvDump((objects,data)):
+def csvDump(objects, data):
     """
-    Dump the (objects,rawdata) that we read from a TDMS file
+    Dump the (objects, rawdata) that we read from a TDMS file
     straight into a CSV file.
     """
 
@@ -797,7 +798,7 @@ def csvDump((objects,data)):
          rawdata,
          properties) = objects[obj]
         
-        print ("OBJECT "+objectpath+" ("+dumpProperties(properties)+")\n")
+        print("OBJECT "+objectpath+" ("+dumpProperties(properties)+")\n")
         # ret = ret + ''
 
     i = 0
