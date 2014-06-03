@@ -1,7 +1,7 @@
 pyTDMS
 ======
 
-A fork of the pyTDMS library for reading National Instruments TDMS files with Python,
+A fork of the pyTDMS module for reading National Instruments TDMS files with Python,
 originally written by Floris van Vugt.
 
 Installation
