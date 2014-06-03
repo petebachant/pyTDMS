@@ -7,7 +7,7 @@ setup(
     name='pyTDMS',
     version='0.0.2',
     author='Floris van Vugt',
-    modules=['pytdms'],
+    py_modules=['pytdms'],
     scripts=[],
     url='https://github.com/petebachant/pyTDMS.git',
     license='LICENSE',
