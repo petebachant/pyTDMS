@@ -7,7 +7,7 @@ originally written by Floris van Vugt.
 Installation
 ------------
 
-Execute `python setup.py install` inside this directory.
+Run `pip install pytdms`, or execute `python setup.py install` inside this directory.
 
 Usage
 -----
