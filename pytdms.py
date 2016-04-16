@@ -1,6 +1,6 @@
 """
 ================================================================
-                Standalone Python TDMS reader, 
+                Standalone Python TDMS reader,
    (not using the NI libraries for they were Windows-specific)
 ================================================================
 
@@ -22,6 +22,7 @@ Thanks guys!
 from __future__ import division, print_function
 import struct
 import os
+import array
 
 # Tells us whether we should really output messages about what
 # we have read (clutters the output buffer though)
@@ -31,20 +32,22 @@ verbose = False
 # they are repeated
 object_rawdata = {}
 
+
 def byteToHex( byteStr ):
     """
     Convert a byte string to it's hex string representation e.g. for output.
     """
     # Uses list comprehension which is a fractionally faster implementation than
     # the alternative, more readable, implementation below
-    #   
+    #
     #    hex = []
     #    for aChar in byteStr:
     #        hex.append( "%02X " % ord( aChar ) )
     #
-    #    return ''.join( hex ).strip()        
+    #    return ''.join( hex ).strip()
 
     return ''.join( [ "%02X " % ord( x ) for x in byteStr ] ).strip()
+
 
 tocProperties = {
     'kTocMetaData'         : (1<<1),
@@ -57,31 +60,31 @@ tocProperties = {
 
 tdsDataTypes = [
     'tdsTypeVoid',
-    'tdsTypeI8',    
+    'tdsTypeI8',
     'tdsTypeI16',
-    'tdsTypeI32',    
+    'tdsTypeI32',
     'tdsTypeI64',
-    'tdsTypeU8',    
-    'tdsTypeU16',    
-    'tdsTypeU32',    
+    'tdsTypeU8',
+    'tdsTypeU16',
+    'tdsTypeU32',
     'tdsTypeU64',
-    'tdsTypeSingleFloat',    
-    'tdsTypeDoubleFloat',    
-    'tdsTypeExtendedFloat',    
-    'tdsTypeSingleFloatWithUnit',    
-    'tdsTypeDoubleFloatWithUnit',    
+    'tdsTypeSingleFloat',
+    'tdsTypeDoubleFloat',
+    'tdsTypeExtendedFloat',
+    'tdsTypeSingleFloatWithUnit',
+    'tdsTypeDoubleFloatWithUnit',
     'tdsTypeExtendedFloatWithUnit',
-    'tdsTypeString',   
-    'tdsTypeBoolean',   
-    'tdsTypeTimeStamp',   
+    'tdsTypeString',
+    'tdsTypeBoolean',
+    'tdsTypeTimeStamp',
     'tdsTypeDAQmxRawData',
 ]
 
 tdsDataTypesDefined = {
-    0x19: 'tdsTypeSingleFloatWithUnit',    
-    0x20: 'tdsTypeString',   
-    0x21: 'tdsTypeBoolean',   
-    0x44: 'tdsTypeTimeStamp',   
+    0x19: 'tdsTypeSingleFloatWithUnit',
+    0x20: 'tdsTypeString',
+    0x21: 'tdsTypeBoolean',
+    0x44: 'tdsTypeTimeStamp',
     0xFFFFFFFF:'tdsTypeDAQmxRawData',
 }
 
@@ -107,6 +110,7 @@ tdsDataTypesTranscriptions = {
     'tdsTypeDAQmxRawData'          :' ', # SHOULD BE HANDLED SEPARATELY
 }
 
+
 def dataTypeFrom( s ):
     """
     Find back the data type from
@@ -117,6 +121,7 @@ def dataTypeFrom( s ):
         return tdsDataTypesDefined[repr]
     else:
         return tdsDataTypes[repr]
+
 
 def dataTypeLength( datatype ):
     """
@@ -137,11 +142,12 @@ def dataTypeLength( datatype ):
         return 16
     if (datatype in [
             'tdsTypeString',
-            'tdsTypeExtendedFloat',    
+            'tdsTypeExtendedFloat',
             'tdsTypeExtendedFloatWithUnit',
             'tdsTypeDAQmxRawData',
             ]):
         return False
+
 
 def dataTypeTranscription( datatype ):
     """
@@ -150,6 +156,7 @@ def dataTypeTranscription( datatype ):
     the right thing out.
     """
     return tdsDataTypesTranscriptions[datatype]
+
 
 def getValue( s, endianness, datatype ):
     """
@@ -166,7 +173,8 @@ def getValue( s, endianness, datatype ):
         return struct.unpack(code, s)[0]
     return False
 
-def readLeadIn( f ):
+
+def readLeadIn(f):
     """
     Read the lead-in of a segment
     """
@@ -176,7 +184,7 @@ def readLeadIn( f ):
         exit()
     s = f.read(4)
     toc = struct.unpack("<i", s)[0]
-    metadata = {}    
+    metadata = {}
     for prop in tocProperties.keys():
         metadata[prop] = (toc & tocProperties[prop])!=0
     #print ("TOC: "+toc)
@@ -190,7 +198,8 @@ def readLeadIn( f ):
     #print ("Length meta: "+str(length_meta))
     return (metadata,version,next_segment_offset,raw_data_offset)
 
-def readObject( f ):
+
+def readObject(f):
     """
     Read object in the metadata array
     """
@@ -254,12 +263,13 @@ def readObject( f ):
         else:
             nm = dataTypeLength( datatype )
             s = f.read(nm)
-            value = getValue( s, "<", datatype ) 
+            value = getValue( s, "<", datatype )
         properties[name]=(datatype,value)
     return (objectpath,
             rawdataindex,
             rawdata,
             properties)
+
 
 def mergeProperties( prop, newprop ):
     """
@@ -273,6 +283,7 @@ def mergeProperties( prop, newprop ):
         retprop[k]=newprop[k]
     # And the return the merged list
     return retprop
+
 
 def mergeObject( obj, newobj ):
     """
@@ -305,6 +316,7 @@ def mergeObject( obj, newobj ):
             retrawdata,
             mergeProperties(properties,newproperties))
 
+
 def mergeObjects( objects, newobjects ):
     """
     Return the objects (metadata), but
@@ -322,10 +334,11 @@ def mergeObjects( objects, newobjects ):
             retobjects[obj] = newobjects[obj]
     return retobjects
 
-def readMetaData( f ):
+
+def readMetaData(f):
     """
     Read meta data from file f.
-    
+
     We return (objects,objectorder) where
     objects is the structure containing all information about
     objects, and objectorder is a list of objectpaths (object ID's if you want)
@@ -356,6 +369,7 @@ def readMetaData( f ):
             objectorder.append( objectpath )
     return (objects,objectorder)
 
+
 def isChannel(obj):
     """
     Tell us whether the given object is a channel
@@ -365,13 +379,14 @@ def isChannel(obj):
     (_,rawdataindex,_,_) = obj
     return rawdataindex!=0xFFFFFFFF
 
+
 def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
     """
     Read raw data from file f,
     given the previously read leadin.
     segmentobjects are the objects that are given in this segment.
     Objectorder is a list of objectpaths (object id's) that shows
-    the order in which the objects are given in the metadata. 
+    the order in which the objects are given in the metadata.
     That is important, for that will be the order in which their
     raw data needs to be read.
     """
@@ -384,13 +399,14 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
     # First see which objects are channels (or really
     # actually which objects are channels AND have data in this segment.
     channel_sizes = {}
-    channels = [ obj for obj in objectorder if isChannel(segmentobjects[obj]) ]
+    channels = [obj for obj in objectorder if isChannel(segmentobjects[obj])]
     for c in channels:
         channel = segmentobjects[c]
         (name,rawdataindex,rawdata,values)=channel
         (rawdata_datatype, rawdata_dim, rawdata_values) = rawdata
         if (rawdata_dim!=1):
-            print("Error! Raw data dimension is ", rawdata_dim, " and should have been 1.")
+            print("Error! Raw data dimension is ", rawdata_dim,
+                  " and should have been 1.")
             exit()
         # Calculate how many bytes a single value is
         datapointsize= dataTypeLength(rawdata_datatype)
@@ -419,33 +435,25 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
     if verbose:
         print("Ready for reading", total_chunks, "bytes (",
               chunk_size, ") in",n_chunks,"chunks")
+
+    # Initialise data to be empty
+    data = {}
+    for c in channels:
+        (_, _, (datatype, _, _), values) = segmentobjects[c]
+        data[c] = array.array(tdsDataTypesTranscriptions[datatype])
+
     if interleaved:
-        print(" ==> Interleaved")
-        # Initialise data to be empty
-        data = {}
-        for c in channel: data[c]=[]
+        if verbose:
+            print(" ==> Interleaved")
         j=0
         while j<chunk_size:
             for c in channel:
-                channel = segmentobjects[c]
-                (name,
-                 rawdataindex,
-                 (datatype, rawdata_dim, rawdata_values),
-                 values) = channel
-                # Calculate how many bytes a single value is
-                datapointsize= dataTypeLength(rawdata_datatype)
-                # Read one value from the file
-                s = f.read(datapointsize)
-                value = getValue( s, endianness, datatype )
-                data[c].append( value )
+                data[c].fromfile(f, 1)
             j+=1
     else:
         if verbose:
             print(" ==> Not Interleaved")
-        data = {}
-        # Start with no data in our channel
-        for c in channels:
-            data[c] = []
+
         for chunk in range(n_chunks):
             for c in channels:
                 size= channel_sizes[c]
@@ -453,14 +461,18 @@ def readRawData( f, leadin, segmentobjects, objectorder, filesize ):
                  rawdataindex,
                  (datatype, rawdata_dim, rawdata_values),
                  values) = segmentobjects[c]
-                # Calculate how many bytes a single value is
-                datapointsize= dataTypeLength(datatype)
-                for j in range(0,rawdata_values):
-                    # Read one value from the file
-                    s = f.read(datapointsize)
-                    value = getValue(s,endianness,datatype)
-                    data[c].append( value )
+
+                data[c].fromfile(f, rawdata_values)
+
+    file10 = struct.unpack(endianness + 'h', b'\1\0')
+    host10 = struct.unpack('=h', b'\1\0')
+
+    if file10 != host10:
+       for c in channels:
+          data[c].byteswap()
+
     return data
+
 
 def mergeRawData( rawdata, newrawdata ):
     """
@@ -478,6 +490,7 @@ def mergeRawData( rawdata, newrawdata ):
             rawdata[channel] = newrawdata[channel]
     return rawdata
 
+
 def readSegment( f, filesize, data ):
     """
     Read a segment from file f, whose filesize is given,
@@ -488,10 +501,8 @@ def readSegment( f, filesize, data ):
     # The stuff in this segment is going to append to this.
     (objects,rawdata)=data
 
-
     leadin = readLeadIn(f)
     (metadata,version,next_segment_offset,raw_data_offset) = leadin
-
 
     newobjects = {}
     # If the segment has metadata...
@@ -503,8 +514,6 @@ def readSegment( f, filesize, data ):
         # Merge the new information with what we knew already about the objects.
         objects = mergeObjects( objects, newobjects )
 
-
-
     if (metadata["kTocRawData"]):
 
         # Read the raw data
@@ -512,9 +521,9 @@ def readSegment( f, filesize, data ):
 
         # And merge the data we just read with what we knew already
         rawdata = mergeRawData( rawdata, newdata )
-        
 
     return (objects,rawdata)
+
 
 def dumpProperties(props):
     ret = ''
@@ -522,6 +531,7 @@ def dumpProperties(props):
         (tp,val)=props[pr]
         ret = ret + (pr+'=') + str(val) + ", "
     return ret
+
 
 def csvDump(objects, data):
     """
@@ -536,42 +546,39 @@ def csvDump(objects, data):
          rawdataindex,
          rawdata,
          properties) = objects[obj]
-        
+
         print("OBJECT "+objectpath+" ("+dumpProperties(properties)+")\n")
         # ret = ret + ''
 
     i = 0
-    maxi = max([ len(data[obj]) for obj in objects.keys() if obj in data.keys() ])
+    maxi = max([len(data[obj]) for obj in objects.keys() if obj in data.keys()])
 
     channels = [ obj for obj in objects.keys() if isChannel(objects[obj]) ]
     ret += '\t'.join(channels)+'\n'
 
     for i in range(maxi):
-        
         for obj in channels:
-
             val = ''
             if ((obj in data.keys()) and i<len(data[obj])):
                 val = str(data[obj][i])
                 # The raw data associated with the object
-        
             ret += val+"\t"
-
         ret += "\n"
-
     return ret
+
 
 def addTimeTrack( obj, channel ):
     """
-    Ok, so we've read the data. Now it's possible that we require some post-processing. For example, if at least one track has time-data set, we'll add a corresponding time vector.
+    Ok, so we've read the data. Now it's possible that we require some
+    post-processing. For example, if at least one track has time-data set, we'll
+    add a corresponding time vector.
 
     So channel is the channel for which we want to have the time vector.
     And object contains its meta data.
 
     We return False if we can't find time data
-    
     """
-    # Now check for each object whether it has 
+    # Now check for each object whether it has
     (objectpath, rawdataindex, rawdata, properties) = obj
 
     if (
@@ -589,6 +596,7 @@ def addTimeTrack( obj, channel ):
 
     # Else we can't find time data
     return False
+
 
 def read(filename):
     """
@@ -615,3 +623,19 @@ def read(filename):
     f.close()
 
     return data
+
+
+def test_read():
+    """Test that a TDMS file can be read."""
+    import numpy as np
+    filename = "test/test.tdms"
+    objects, rawdata = read(filename)
+    Ttrans = np.asarray(rawdata[b"/'Untitled'/'TorqueTrans'"])
+    Tarm = np.asarray(rawdata[b"/'Untitled'/'TorqueArm'"])
+    dragL = np.asarray(rawdata[b"/'Untitled'/'DragL'"])
+    dragR = np.asarray(rawdata[b"/'Untitled'/'DragR'"])
+    angle = np.asarray(rawdata[b"/'Untitled'/'Untitled'"])
+    print("len(Ttrans): ", len(Ttrans))
+    assert len(Ttrans) > 0
+    assert len(Ttrans) == len(Tarm)
+    assert len(dragL) == len(dragR)

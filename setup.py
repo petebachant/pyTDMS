@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name='pyTDMS',
-    version='0.0.2',
+    version='0.0.3',
     author='Floris van Vugt',
     author_email='F.T.vanVugt@gmail.com',
     py_modules=['pytdms'],
